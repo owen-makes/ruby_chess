@@ -1,12 +1,13 @@
 Dir[File.join(__dir__, 'pieces', '*.rb')].sort.each { |file| require_relative file }
 
 class Board
-  attr_reader :board
+  attr_reader :board, :captured
 
   def initialize(board_size = 8)
     @board = Array.new(board_size) { Array.new(board_size) }
     @size = board_size
     @board_ui = nil
+    @captured = { whites: [], blacks: [] }
   end
 
   def populate
@@ -67,18 +68,112 @@ class Board
   def move_piece(start, target)
     piece = @board[start[0]][start[1]]
     destination = @board[target[0]][target[1]]
-    nil unless piece.legal_move?(target[0], target[1])
-    # if piece.is_a(Knight)
-    #   destination.nil? ? piece.move(target[0], target[1])
-    # end
+    return nil unless piece.legal_move?(target[0], target[1])
+
+    return nil unless path_clear?(start, target)
+
+    if destination.nil?
+      @board[target[0]][target[1]] = @board[start[0]][start[1]]
+      @board[target[0]][target[1]].move(target[0], target[1])
+      @board[start[0]][start[1]] = nil
+      update_board_ui
+    else
+      capture_piece(start, target)
+    end
   end
 
   def path_clear?(pos_start, pos_end)
     # Check if path is clear to move (King, Queen, Bish, Rook, Pawn)
+    piece = @board[pos_start[0]][pos_start[1]]
+    case piece
+    in Pawn
+      check_pawn_path(pos_start, pos_end)
+    in Rook
+      check_hv_path(pos_start, pos_end)
+    in Bishop
+      check_diag_path(pos_start, pos_end)
+    in Queen
+      check_queen_path(pos_start, pos_end)
+    in King | Knight
+      true
+    end
   end
 
-  def take_piece
-    # How?
+  def check_hv_path(pos_start, pos_end)
+    # 0 is X, 1 is Y
+    if (pos_end[0] - pos_start[0]).abs > 1
+      range = pos_end[0] > pos_start[0] ? (pos_start[0] + 1...pos_end[0]) : (pos_end[0] + 1...pos_start[0])
+      range.all? { |column| @board[column][pos_start[1]].nil? }
+    elsif (pos_end[1] - pos_start[1]).abs > 1
+      range = pos_end[1] > pos_start[1] ? (pos_start[1] + 1...pos_end[1]) : (pos_end[1] + 1...pos_start[1])
+      range.all? { |row| @board[pos_start[0]][row].nil? }
+    else
+      true # If moving only one square, the path is always clear
+    end
+  end
+
+  def check_diag_path(pos_start, pos_end)
+    x_step = pos_end[0] > pos_start[0] ? 1 : -1
+    y_step = pos_end[1] > pos_start[1] ? 1 : -1
+
+    x, y = pos_start[0] + x_step, pos_start[1] + y_step
+    return true if pos_end[0] == x && pos_end[1] == 1
+
+    while x != pos_end[0] || y != pos_end[1]
+      return false unless @board[x][y].nil?
+
+      x += x_step
+      y += y_step
+    end
+
+    true
+  end
+
+  def check_queen_path(pos_start, pos_end)
+    if pos_start[0] == pos_end[0] || pos_start[1] == pos_end[1]
+      check_hv_path(pos_start, pos_end)
+    else
+      check_diag_path(pos_start, pos_end)
+    end
+  end
+
+  def check_pawn_path(pos_start, pos_end)
+    piece = @board[pos_start[0]][pos_start[1]]
+
+    if pos_start[0] == pos_end[0] # Moving forward
+      (pos_start[1] + 1..pos_end[1]).all? { |row| @board[pos_start[1]][row].nil? }
+    else # Diagonal capture
+      @board[pos_end[0]][pos_end[1]].nil? || @board[pos_end[0]][pos_end[1]].color != piece.color
+    end
+  end
+
+  def capture_piece(start_pos, end_pos)
+    start_piece = @board[start_pos[0]][start_pos[1]]
+    target_piece = @board[end_pos[0]][end_pos[1]]
+
+    # Check if there's actually a piece to capture
+    return false unless target_piece
+
+    # Check if it's an enemy piece
+    return false if start_piece.color == target_piece.color
+
+    # Special case for pawns
+    if start_piece.is_a?(Pawn) && !((end_pos[0] - start_pos[0]).abs == 1 && (end_pos[1] - start_pos[1]).abs == 1)
+      # Pawns can only capture diagonally
+      return false
+    end
+
+    # Perform the capture
+    target_piece.capture
+    symbol = target_piece.color.zero? ? :whites : :blacks
+    @captured[symbol].push(target_piece)
+    @board[end_pos[0]][end_pos[1]] = start_piece
+    start_piece.move(end_pos[0], end_pos[1])
+    @board[start_pos[0]][start_pos[1]] = nil
+
+    update_board_ui
+
+    true # Capture successful
   end
 
   def castle

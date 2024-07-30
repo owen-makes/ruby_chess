@@ -6,7 +6,7 @@ class Pawn < Piece
   def initialize(position, color)
     super(color, position)
     @icon = @color.zero? ? '♙' : '♟' # 0 for white, 1 for black
-    @move_offsets = [[0, 1], [0, 2], [1, 1], [-1, 1]]
+    @move_offsets = @position[1] > 5 ? [[0, -1], [-1, -1], [0, -2], [1, -1]] : [[0, 1], [0, 2], [1, 1], [-1, 1]]
     @previous_moves = 0
   end
 
@@ -19,7 +19,11 @@ class Pawn < Piece
   end
 
   def update_moves
-    @move_offsets.delete([0, 2])
+    if @move_offsets.include?([0, 2])
+      @move_offsets.delete([0, 2])
+    else
+      @move_offsets.delete([0, -2])
+    end
   end
 
   def legal_move?(x, y)

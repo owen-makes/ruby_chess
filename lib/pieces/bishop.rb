@@ -10,7 +10,7 @@ class Bishop < Piece
     [-4, 4], [5, 5], [-5, -5], [5, -5], [-5, 5],
     [6, 6], [-6, -6],  [6, -6], [-6, 6], [7, 7],
     [-7, -7], [7, -7], [-7, 7]
-  ]
+  ].freeze
 
   def initialize(position, color)
     super(color, position)

@@ -8,8 +8,9 @@ describe Board do
       test_board.populate
     end
 
-    it 'adds pawns to the second row' do
+    it 'adds pawns to the second and sixth row' do
       expect(test_board.board.all? { |column| column[1].is_a?(Pawn) }).to be true
+      expect(test_board.board.all? { |column| column[6].is_a?(Pawn) }).to be true
     end
 
     it 'adds rooks to the corners' do
@@ -45,6 +46,77 @@ describe Board do
 
     it 'puts populated board' do
       expect { test_board.display_board }.to output.to_stdout
+    end
+  end
+
+  describe '#path_clear?' do
+    before do
+      test_board.populate
+    end
+
+    it 'returns true when moving pawn a2 to a4' do
+      expect(test_board.path_clear?([0, 6], [0, 4])).to eq(true)
+    end
+
+    it 'returns false when trying to move left white rook from starting pos' do
+      expect(test_board.path_clear?([0, 7], [0, 3])).to eq(false)
+    end
+
+    it 'returns false when trying to move white queen from starting pos' do
+      expect(test_board.path_clear?([3, 7], [5, 5])).to eq(false)
+    end
+
+    it 'returns false when trying to move black bishop' do
+      expect(test_board.path_clear?([2, 0], [4, 2])).to eq(false)
+    end
+
+    it 'returns true when moving white knight' do
+      expect(test_board.path_clear?([6, 7], [5, 5])).to eq(true)
+    end
+  end
+
+  describe '#move_piece' do
+    let(:test_pawn) { Pawn.new([0, 6], 0) }
+    let(:test_bishop) { Bishop.new([4, 5], 0) }
+    let(:black_pawn) { Pawn.new([1, 3], 1) }
+
+    before do
+      test_board.board[0][6] = test_pawn
+      test_board.board[4][5] = test_bishop
+      test_board.board[1][3] = black_pawn
+    end
+
+    it 'moves pawn a2 forward to a5' do
+      expect { test_board.move_piece([0, 6], [0, 4]) }.to change { test_pawn.position }.from([0, 6]).to([0, 4])
+    end
+
+    it 'moves bishop e3 diagonally to b2' do
+      expect { test_board.move_piece([4, 5], [1, 2]) }.to change { test_bishop.position }.from([4, 5]).to([1, 2])
+    end
+
+    it 'captures pieces when possible' do
+      test_board.move_piece([0, 6], [0, 4])
+      expect { test_board.move_piece([0, 4], [1, 3]) }.to change { test_pawn.position }.from([0, 4]).to([1, 3])
+      expect(test_board.board[1][3] == test_pawn).to eq(true)
+    end
+  end
+
+  describe '#capture_piece' do
+    let(:white_pawn) { Pawn.new([1, 2], 0) }
+    let(:test_queen) { Queen.new([4, 5], 1) }
+
+    before do
+      test_board.board[1][2] = white_pawn
+      test_board.board[4][5] = test_queen
+    end
+
+    it 'adds captured piece to hash' do
+      test_board.capture_piece([4, 5], [1, 2])
+      expect(test_board.captured[:whites].include?(white_pawn)).to eq(true)
+    end
+
+    it 'returns false when trying ilegal move' do
+      expect(test_board.capture_piece([1, 2], [4, 5])).to eq(false)
     end
   end
 end

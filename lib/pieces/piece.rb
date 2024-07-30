@@ -10,6 +10,12 @@ class Piece
     x.between?(0, 7) && y.between?(0, 7)
   end
 
+  def capture
+    update_position(nil, nil)
+  end
+
+  protected
+
   def update_position(x, y)
     @position = [x, y]
   end

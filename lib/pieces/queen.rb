@@ -23,4 +23,21 @@ class Queen < Piece
     super(color, position)
     @icon = @color.zero? ? '♕' : '♛' # 0 for white, 1 for black
   end
+
+  def move(x, y)
+    return unless legal_move?(x, y)
+
+    update_position(x, y)
+  end
+
+  def legal_move?(x, y)
+    legal_moves(@position).include?([x, y])
+  end
+
+  private
+
+  def legal_moves(start)
+    MOVE_OFFSETS.map { |dx, dy| [start[0] + dx, start[1] + dy] }
+                .select { |x, y| valid_position?(x, y) }
+  end
 end
