@@ -79,11 +79,13 @@ describe Board do
     let(:test_pawn) { Pawn.new([0, 6], 0) }
     let(:test_bishop) { Bishop.new([4, 5], 0) }
     let(:black_pawn) { Pawn.new([1, 3], 1) }
+    let(:promote_pawn) { Pawn.new([1, 1], 0) }
 
     before do
       test_board.board[0][6] = test_pawn
       test_board.board[4][5] = test_bishop
       test_board.board[1][3] = black_pawn
+      test_board.board[1][1] = promote_pawn
     end
 
     it 'moves pawn a2 forward to a5' do
@@ -99,15 +101,25 @@ describe Board do
       expect { test_board.move_piece([0, 4], [1, 3]) }.to change { test_pawn.position }.from([0, 4]).to([1, 3])
       expect(test_board.board[1][3] == test_pawn).to eq(true)
     end
+
+    context 'when getting a pawn to end row' do
+      it 'allows for pawn promotion' do
+        expect(test_board.move_piece([1, 1], [1, 0])).to_not be_nil
+        allow(test_board).to receive(:gets).and_return('/n')
+        expect(test_board.board[1][0]).to be_a(Queen)
+      end
+    end
   end
 
   describe '#capture_piece' do
     let(:white_pawn) { Pawn.new([1, 2], 0) }
     let(:test_queen) { Queen.new([4, 5], 1) }
+    let(:black_pawn) { Pawn.new([1, 3], 1) }
 
     before do
       test_board.board[1][2] = white_pawn
       test_board.board[4][5] = test_queen
+      test_board.board[1][3] = black_pawn
     end
 
     it 'adds captured piece to hash' do
@@ -117,6 +129,59 @@ describe Board do
 
     it 'returns false when trying ilegal move' do
       expect(test_board.capture_piece([1, 2], [4, 5])).to eq(false)
+    end
+
+    it 'returns false when trying to capture forward with pawn' do
+      expect(test_board.capture_piece([1, 2], [1, 3])).to eq(false)
+    end
+  end
+
+  describe '#promote_pawn?' do
+    let(:white_pawn) { Pawn.new([1, 0], 0) }
+    let(:black_pawn) { Pawn.new([2, 0], 1) }
+    let(:black_pawn2) { Pawn.new([2, 7], 1) }
+
+    before do
+      test_board.board[1][0] = white_pawn
+      test_board.board[2][0] = black_pawn
+      test_board.board[2][7] = black_pawn2
+    end
+
+    it 'calls promote on white pawn @ b8' do
+      expect(test_board).to receive(:promote).with([1, 0], 0)
+      test_board.promote_pawn?([1, 0])
+    end
+
+    it 'calls promote on black pawn @ c1' do
+      expect(test_board).to receive(:promote).with([2, 7], 1)
+      test_board.promote_pawn?([2, 7])
+    end
+
+    it 'returns false for black pawn @ c8' do
+      expect(test_board.promote_pawn?([2, 0])).to eq(false)
+    end
+  end
+
+  describe '#promote' do
+    let(:white_pawn) { Pawn.new([1, 0], 0) }
+    let(:black_pawn) { Pawn.new([2, 0], 1) }
+    let(:black_pawn2) { Pawn.new([2, 7], 1) }
+
+    before do
+      test_board.board[1][0] = white_pawn
+      test_board.board[2][0] = black_pawn
+    end
+
+    it 'promotes b8 white pawn to queen' do
+      allow(test_board).to receive(:gets).and_return('/n')
+      test_board.promote([1, 0], 0)
+      expect(test_board.board[1][0]).to be_a(Queen)
+    end
+
+    it 'promotes c1 black pawn to knight' do
+      allow(test_board).to receive(:gets).and_return('N')
+      test_board.promote([2, 7], 1)
+      expect(test_board.board[2][7]).to be_a(Knight)
     end
   end
 end

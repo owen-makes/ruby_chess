@@ -76,9 +76,11 @@ class Board
       @board[target[0]][target[1]] = @board[start[0]][start[1]]
       @board[target[0]][target[1]].move(target[0], target[1])
       @board[start[0]][start[1]] = nil
+      promote_pawn?(target)
       update_board_ui
     else
       capture_piece(start, target)
+      promote_pawn?(target)
     end
   end
 
@@ -151,19 +153,13 @@ class Board
     start_piece = @board[start_pos[0]][start_pos[1]]
     target_piece = @board[end_pos[0]][end_pos[1]]
 
-    # Check if there's actually a piece to capture
     return false unless target_piece
-
-    # Check if it's an enemy piece
     return false if start_piece.color == target_piece.color
 
-    # Special case for pawns
     if start_piece.is_a?(Pawn) && !((end_pos[0] - start_pos[0]).abs == 1 && (end_pos[1] - start_pos[1]).abs == 1)
-      # Pawns can only capture diagonally
       return false
     end
 
-    # Perform the capture
     target_piece.capture
     symbol = target_piece.color.zero? ? :whites : :blacks
     @captured[symbol].push(target_piece)
@@ -176,14 +172,43 @@ class Board
     true # Capture successful
   end
 
-  def castle
-    # Handle Castling
-    # castle_king_side 0-0
+  def castle(color, ks_or_qs)
+    row = color.zero? ? 7 : 0
+    column = ks_or_qs == '0-0' ? 7 : 0
+    king = @board[4][row]
+    rook = @board[column][row]
+    # Check for rook and king to not have moved
+    return false unless king.previous_moves.empty? || rook.previous_moves.empty?
+
+    if column.zero?
+      false unless @board[1][row].nil? && @board[2][row].nil? && board[3][row].nil?
+    else
+      false unless @board[5][row].nil? && @board[6][row].nil?
+    end
+    # To-Do:
+    # return false if king in check
+    # return false if king passes through check
     # castle_queen_side 0-0-0
-    # Should check King.previous_moves and Rook.previous_moves
   end
 
-  def promote_pawn_to(piece)
-    # Handle pawn promotion
+  def promote_pawn?(target)
+    piece = @board[target[0]][target[1]]
+    return false unless piece.is_a?(Pawn)
+
+    end_row = piece.color.zero? ? 0 : 7
+    target[1] == end_row ? promote(target, piece.color) : false
+  end
+
+  def promote(target, color)
+    puts 'Type a letter to choose the piece you want to promote to (Queen(Q)//Knight(N)//Bishop(B)):'
+    choice = gets.chomp.to_s
+    @board[target[0]][target[1]] = case choice
+                                   when 'N'
+                                     Knight.new(target, color)
+                                   when 'B'
+                                     Bishop.new(target, color)
+                                   else
+                                     Queen.new(target, color)
+                                   end
   end
 end
