@@ -28,9 +28,7 @@ class Rook < Piece
     legal_moves(@position).include?([x, y])
   end
 
-  private
-
-  def legal_moves(start)
+  def legal_moves(start = @position)
     MOVE_OFFSETS.map { |dx, dy| [start[0] + dx, start[1] + dy] }
                 .select { |x, y| valid_position?(x, y) }
   end

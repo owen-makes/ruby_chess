@@ -184,4 +184,105 @@ describe Board do
       expect(test_board.board[2][7]).to be_a(Knight)
     end
   end
+
+  describe '#in_check?' do
+    subject(:new_board) { Board.new }
+
+    after do
+      new_board.clear_board
+    end
+
+    it 'returns false in starting position for both colors' do
+      new_board.populate
+      expect(new_board.in_check?(0)).to eq(false)
+      expect(new_board.in_check?(1)).to eq(false)
+    end
+
+    it 'returns true for white (fools mate)' do
+      new_board.populate
+      # Fool's mate
+      new_board.move_piece([5, 6], [5, 5])
+      new_board.move_piece([6, 6], [6, 4])
+      # Black
+      new_board.move_piece([4, 1], [4, 3])
+      new_board.move_piece([3, 0], [7, 4])
+      expect(new_board.in_check?(0)).to eq(true)
+    end
+
+    it 'returns true for black mate' do
+      new_board.board[4][0] = Rook.new([4, 0], 0)
+      new_board.board[7][2] = King.new([7, 2], 0)
+      new_board.board[7][0] = King.new([7, 0], 1)
+      expect(new_board.in_check?(1)).to eq(true)
+    end
+  end
+
+  describe '#get_pieces' do
+    subject(:new_board) { Board.new }
+
+    it 'returns white pieces' do
+      new_board.populate
+      expect(new_board.get_pieces(0).all? { |piece| piece.color == 0 }).to eq(true)
+    end
+
+    it 'returns black pieces' do
+      new_board.populate
+      expect(new_board.get_pieces(1).all? { |piece| piece.color == 1 }).to eq(true)
+    end
+
+    it 'returns one piece (king)' do
+      new_board.board[7][0] = King.new([7, 0], 1)
+      new_board.update_board_ui
+      expect(new_board.get_pieces(1).all?(King)).to be true
+    end
+  end
+
+  describe '#checkmate?' do
+    subject(:new_board) { Board.new }
+
+    after do
+      new_board.clear_board
+    end
+
+    it 'returns true for white (fools mate)' do
+      # Fool's mate
+      new_board.populate
+      new_board.move_piece([5, 6], [5, 5])
+      new_board.move_piece([6, 6], [6, 4])
+      new_board.move_piece([4, 1], [4, 3])
+      new_board.move_piece([3, 0], [7, 4])
+      expect(new_board.checkmate?(0)).to eq(true)
+    end
+
+    it 'returns true for black mate' do
+      new_board.board[4][0] = Rook.new([4, 0], 0)
+      new_board.board[7][2] = King.new([7, 2], 0)
+      new_board.board[7][0] = King.new([7, 0], 1)
+      new_board.update_board_ui
+      expect(new_board.checkmate?(1)).to eq(true)
+    end
+  end
+
+  describe '#simulate_move' do
+    subject(:new_board) { Board.new }
+    before do
+      new_board.populate
+    end
+
+    it 'moves pawn a2 to a3' do
+      expect(new_board.simulate_move(new_board.board[0][6], [0, 5]).board[0][5]).to be_a(Pawn)
+    end
+  end
+
+  describe '#stalemate?' do
+    subject(:new_board) { Board.new }
+
+    it 'returns true for black stalemate' do
+      new_board.board[4][0] = Rook.new([6, 2], 0)
+      new_board.board[7][2] = King.new([7, 2], 0)
+      new_board.board[7][0] = King.new([7, 0], 1)
+      new_board.update_board_ui
+      expect(new_board.stalemate?(1)).to eq(true)
+    end
+  end
 end

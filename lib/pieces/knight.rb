@@ -23,11 +23,9 @@ class Knight < Piece
     legal_moves(@position).include?([x, y])
   end
 
-  private
-
   # Checks for valid & legal moves
-  def legal_moves(coord)
-    MOVE_OFFSETS.map { |dx, dy| [coord[0] + dx, coord[1] + dy] }
+  def legal_moves(start = @position)
+    MOVE_OFFSETS.map { |dx, dy| [start[0] + dx, start[1] + dy] }
                 .select { |x, y| valid_position?(x, y) }
   end
 end

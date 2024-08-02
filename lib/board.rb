@@ -1,7 +1,7 @@
 Dir[File.join(__dir__, 'pieces', '*.rb')].sort.each { |file| require_relative file }
 
 class Board
-  attr_reader :board, :captured
+  attr_reader :board, :captured, :board_ui
 
   def initialize(board_size = 8)
     @board = Array.new(board_size) { Array.new(board_size) }
@@ -13,6 +13,7 @@ class Board
   def populate
     pop_white
     pop_black
+    update_board_ui
   end
 
   def pop_white
@@ -38,14 +39,13 @@ class Board
   end
 
   def generate_board
-    # Create the column labels
     board_string = "  a b c d e f g h\n"
 
     8.downto(1) do |row|
       board_string += "#{row} " # Add row index on left side
 
       8.times do |col|
-        piece = @board[col][row - 1] # Adjust for 0-based index
+        piece = @board[col][8 - row] # Adjust for 0-based index
         icon = piece ? piece.icon : '·' # If piece exists, assign icon, if not middle dot
         board_string += "#{icon} "
       end
@@ -53,9 +53,7 @@ class Board
       board_string += "#{row}\n"
     end
 
-    # Add the bottom column labels
     board_string += '  a b c d e f g h'
-
     board_string
   end
 
@@ -69,7 +67,6 @@ class Board
     piece = @board[start[0]][start[1]]
     destination = @board[target[0]][target[1]]
     return nil unless piece.legal_move?(target[0], target[1])
-
     return nil unless path_clear?(start, target)
 
     if destination.nil?
@@ -210,5 +207,65 @@ class Board
                                    else
                                      Queen.new(target, color)
                                    end
+  end
+
+  def find_king_position(color)
+    @board.each_with_index do |row, i|
+      row.each_with_index do |piece, j|
+        return [i, j] if piece.is_a?(King) && piece.color == color
+      end
+    end
+  end
+
+  def in_check?(color)
+    opponent = color.zero? ? 1 : 0
+    king_pos = find_king_position(color)
+    get_pieces(opponent).any? do |piece|
+      piece.legal_move?(king_pos[0], king_pos[1]) &&
+        path_clear?(piece.position, king_pos)
+    end
+  end
+
+  def checkmate?(color)
+    return false unless in_check?(color)
+
+    get_pieces(color).any? do |piece|
+      piece.legal_moves.any? do |move|
+        board_after_move = simulate_move(piece, move)
+        board_after_move.in_check?(color)
+      end
+    end
+  end
+
+  def stalemate?(color)
+    return false if in_check?(color)
+
+    get_pieces(color).any? do |piece|
+      piece.legal_moves.any? do |move|
+        board_after_move = simulate_move(piece, move)
+        board_after_move.in_check?(color)
+      end
+    end
+  end
+
+  def get_pieces(color)
+    a = []
+    @board.each do |row|
+      row.each do |piece|
+        a << piece if piece.is_a?(Piece) && piece.color == color
+      end
+    end
+    a
+  end
+
+  def simulate_move(piece, move)
+    serialized_board = Marshal.dump(self)
+    board_copy = Marshal.load(serialized_board)
+    board_copy.move_piece(piece.position, move)
+    board_copy
+  end
+
+  def clear_board
+    @board.each(&:clear)
   end
 end
