@@ -169,23 +169,51 @@ class Board
     true # Capture successful
   end
 
-  def castle(color, ks_or_qs)
+  def castle?(color, ks_or_qs)
     row = color.zero? ? 7 : 0
-    column = ks_or_qs == '0-0' ? 7 : 0
+    column = ks_or_qs == 'ks' ? 7 : 0 # To get rook
     king = @board[4][row]
     rook = @board[column][row]
-    # Check for rook and king to not have moved
-    return false unless king.previous_moves.empty? || rook.previous_moves.empty?
+    # Check for rook and king to not have moved / Check that king not in check
+    return false unless king.previous_moves.zero? || rook.previous_moves.zero?
+    return false if in_check?(color)
 
-    if column.zero?
-      false unless @board[1][row].nil? && @board[2][row].nil? && board[3][row].nil?
-    else
-      false unless @board[5][row].nil? && @board[6][row].nil?
+    # Check that path is clear & king does not pass through check
+    if column.zero? # Queenside
+      return false unless @board[1][row].nil? && @board[2][row].nil? && board[3][row].nil?
+      return false if simulate_move(king, [3, row]).in_check?(color)
+      return false if simulate_move(king, [2, row]).in_check?(color)
+    else # Kingside
+      return false unless @board[5][row].nil? && @board[6][row].nil?
+      return false if simulate_move(king, [5, row]).in_check?(color)
+      return false if simulate_move(king, [6, row]).in_check?(color)
     end
-    # To-Do:
-    # return false if king in check
-    # return false if king passes through check
-    # castle_queen_side 0-0-0
+
+    true
+  end
+
+  def castle_qs(color)
+    return nil unless castle?(color, 'qs')
+
+    row = color.zero? ? 7 : 0
+    king = [4, row]
+    move_piece(king, [3, row])
+    move_piece([3, row], [2, row])
+    @board[3][row] = @board[0][row]
+    @board[3][row].move(3, row)
+    @board[0][row] = nil
+  end
+
+  def castle_ks(color)
+    return nil unless castle?(color, 'ks')
+
+    row = color.zero? ? 7 : 0
+    king = [4, row]
+    move_piece(king, [5, row])
+    move_piece([5, row], [6, row])
+    @board[5][row] = @board[7][row]
+    @board[5][row].move(5, row)
+    @board[7][row] = nil
   end
 
   def promote_pawn?(target)

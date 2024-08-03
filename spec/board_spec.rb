@@ -258,7 +258,6 @@ describe Board do
       new_board.board[4][0] = Rook.new([4, 0], 0)
       new_board.board[7][2] = King.new([7, 2], 0)
       new_board.board[7][0] = King.new([7, 0], 1)
-      new_board.update_board_ui
       expect(new_board.checkmate?(1)).to eq(true)
     end
   end
@@ -283,6 +282,88 @@ describe Board do
       new_board.board[7][0] = King.new([7, 0], 1)
       new_board.update_board_ui
       expect(new_board.stalemate?(1)).to eq(true)
+    end
+  end
+
+  describe '#castle?' do
+    subject(:new_board) { Board.new }
+
+    it 'returns false when king has moved' do
+      new_board.populate
+      new_board.move_piece([4, 6], [4, 4]) # Move pawn forward 2 spots
+      new_board.move_piece([4, 7], [4, 6]) # Move king forward
+      new_board.move_piece([4, 6], [4, 7]) # Move king back to starting pos
+      expect(new_board.castle?(0, 'ks')).to eq(false)
+    end
+
+    it 'returns false when rook has moved' do
+      new_board.populate
+      new_board.move_piece([7, 6], [7, 4]) # Move pawn forward 2 spots
+      new_board.move_piece([7, 7], [7, 5]) # Move rook forward
+      new_board.move_piece([7, 5], [7, 7]) # Move rook back to starting pos
+      expect(new_board.castle?(0, 'ks')).to eq(false)
+    end
+
+    it 'returns false when path not clear' do
+      new_board.populate
+      expect(new_board.castle?(1, 'ks')).to eq(false)
+    end
+
+    it 'returns false when king in check' do
+      new_board.board[4][7] = King.new([4, 7], 0)
+      new_board.board[7][7] = Rook.new([7, 7], 0)
+      new_board.board[6][6] = Knight.new([6, 6], 1)
+      expect(new_board.castle?(0, 'ks')).to eq(false)
+    end
+
+    it 'returns false when king passes through check' do
+      new_board.board[4][0] = King.new([4, 0], 1)
+      new_board.board[0][0] = Rook.new([0, 0], 1)
+      new_board.board[4][2] = Knight.new([4, 2], 0)
+      expect(new_board.castle?(1, 'qs')).to eq(false)
+    end
+
+    it 'returns false when king ends in check' do
+      new_board.board[4][0] = King.new([4, 0], 1)
+      new_board.board[0][0] = Rook.new([0, 0], 1)
+      new_board.board[3][2] = Knight.new([3, 2], 0)
+      expect(new_board.castle?(1, 'qs')).to eq(false)
+    end
+
+    it 'returns true when QS castle is available' do
+      new_board.board[4][0] = King.new([4, 0], 1)
+      new_board.board[0][0] = Rook.new([0, 0], 1)
+      expect(new_board.castle?(1, 'qs')).to eq(true)
+    end
+
+    it 'returns true when KS castle is available' do
+      new_board.board[4][7] = King.new([4, 7], 0)
+      new_board.board[7][7] = Rook.new([7, 7], 0)
+      expect(new_board.castle?(0, 'ks')).to eq(true)
+    end
+  end
+
+  describe '#castle_qs' do
+    subject(:new_board) { Board.new }
+
+    it 'castles QS when available' do
+      new_board.board[4][0] = King.new([4, 0], 1)
+      new_board.board[0][0] = Rook.new([0, 0], 1)
+      new_board.castle_qs(1)
+      expect(new_board.board[2][0]).to be_a(King)
+      expect(new_board.board[3][0]).to be_a(Rook)
+      new_board.update_board_ui
+      puts new_board.board_ui
+    end
+
+    it 'castles KS when available' do
+      new_board.board[4][7] = King.new([4, 7], 0)
+      new_board.board[7][7] = Rook.new([7, 7], 0)
+      new_board.castle_ks(0)
+      expect(new_board.board[6][7]).to be_a(King)
+      expect(new_board.board[5][7]).to be_a(Rook)
+      new_board.update_board_ui
+      puts new_board.board_ui
     end
   end
 end
