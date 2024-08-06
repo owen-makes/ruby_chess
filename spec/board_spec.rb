@@ -80,6 +80,7 @@ describe Board do
     let(:test_bishop) { Bishop.new([4, 5], 0) }
     let(:black_pawn) { Pawn.new([1, 3], 1) }
     let(:promote_pawn) { Pawn.new([1, 1], 0) }
+    let(:ep_pawn) { Pawn.new([1, 4], 1) }
 
     before do
       test_board.board[0][6] = test_pawn
@@ -88,8 +89,21 @@ describe Board do
       test_board.board[1][1] = promote_pawn
     end
 
+    it 'captures en passant' do
+      test_board.clear_board
+      test_board.board[0][6] = test_pawn
+      test_board.board[1][4] = ep_pawn
+      test_board.move_piece([0, 6], [0, 4])
+      test_board.move_piece([1, 4], [0, 5])
+      expect(test_board.board[0][4]).to be_nil
+    end
+
     it 'moves pawn a2 forward to a5' do
       expect { test_board.move_piece([0, 6], [0, 4]) }.to change { test_pawn.position }.from([0, 6]).to([0, 4])
+    end
+
+    it 'does not allow to move pawns diagonally without capture' do
+      expect(test_board.move_piece([1, 3], [2, 4])).to be_nil
     end
 
     it 'moves bishop e3 diagonally to b2' do
@@ -352,8 +366,6 @@ describe Board do
       new_board.castle_qs(1)
       expect(new_board.board[2][0]).to be_a(King)
       expect(new_board.board[3][0]).to be_a(Rook)
-      new_board.update_board_ui
-      puts new_board.board_ui
     end
 
     it 'castles KS when available' do
@@ -362,8 +374,6 @@ describe Board do
       new_board.castle_ks(0)
       expect(new_board.board[6][7]).to be_a(King)
       expect(new_board.board[5][7]).to be_a(Rook)
-      new_board.update_board_ui
-      puts new_board.board_ui
     end
   end
 end

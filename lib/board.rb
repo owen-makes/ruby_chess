@@ -58,8 +58,7 @@ class Board
   end
 
   def display_board
-    # If @board_ui hasn't been generated yet, generate it
-    update_board_ui if @board_ui.nil?
+    update_board_ui
     puts @board_ui
   end
 
@@ -70,19 +69,25 @@ class Board
     return nil unless path_clear?(start, target)
 
     if destination.nil?
-      @board[target[0]][target[1]] = @board[start[0]][start[1]]
-      @board[target[0]][target[1]].move(target[0], target[1])
-      @board[start[0]][start[1]] = nil
+      if piece.is_a?(Pawn) && en_passant?(start, target)
+        capture_en_passant(start, target)
+      else
+        @board[target[0]][target[1]] = @board[start[0]][start[1]]
+        @board[target[0]][target[1]].move(target[0], target[1])
+        @board[start[0]][start[1]] = nil
+      end
       promote_pawn?(target)
       update_board_ui
     else
       capture_piece(start, target)
       promote_pawn?(target)
     end
+
+    @last_move = [piece, target]
   end
 
   def path_clear?(pos_start, pos_end)
-    # Check if path is clear to move (King, Queen, Bish, Rook, Pawn)
+    # Check if path is clear to move
     piece = @board[pos_start[0]][pos_start[1]]
     case piece
     in Pawn
@@ -138,12 +143,40 @@ class Board
 
   def check_pawn_path(pos_start, pos_end)
     piece = @board[pos_start[0]][pos_start[1]]
+    target = @board[pos_end[0]][pos_end[1]]
 
     if pos_start[0] == pos_end[0] # Moving forward
-      (pos_start[1] + 1..pos_end[1]).all? { |row| @board[pos_start[1]][row].nil? }
+      target.nil?
+    elsif target.nil?
+      en_passant?(pos_start, pos_end)
     else # Diagonal capture
-      @board[pos_end[0]][pos_end[1]].nil? || @board[pos_end[0]][pos_end[1]].color != piece.color
+      !target.nil? &&
+        @board[pos_end[0]][pos_end[1]].color != piece.color &&
+        ((pos_end[0] - pos_start[0]).abs == 1 && (pos_end[1] - pos_start[1]).abs == 1)
     end
+  end
+
+  def en_passant?(pos_start, pos_end)
+    piece = @board[pos_start[0]][pos_start[1]]
+    capture = @board[pos_end[0]][pos_start[1]] # The pawn to be captured
+
+    return false unless piece.is_a?(Pawn)
+    return false unless capture.is_a?(Pawn)
+    return false unless capture.color != piece.color
+    return false unless capture.previous_moves == 1 # The captured pawn must have just moved two squares
+
+    # Check if the capturing pawn is on the correct rank
+    row = piece.color.zero? ? 3 : 4
+    return false unless pos_start[1] == row
+
+    # Check if the move is diagonal
+    return false unless (pos_end[0] - pos_start[0]).abs == 1
+    return false unless (pos_end[1] - pos_start[1]).abs == 1
+
+    # Check if the capture is happening immediately after the two-square move
+    return false unless @last_move[1] == capture.position
+
+    true
   end
 
   def capture_piece(start_pos, end_pos)
@@ -167,6 +200,19 @@ class Board
     update_board_ui
 
     true # Capture successful
+  end
+
+  def capture_en_passant(start, target)
+    piece = @board[start[0]][start[1]]
+    target_piece = @board[target[0]][start[1]]
+
+    @board[target[0]][target[1]] = piece
+    piece.move(target[0], target[1])
+    target_piece.capture
+    symbol = target_piece.color.zero? ? :whites : :blacks
+    @captured[symbol].push(target_piece)
+    @board[start[0]][start[1]] = nil
+    @board[target[0]][start[1]] = nil
   end
 
   def castle?(color, ks_or_qs)
@@ -202,6 +248,7 @@ class Board
     @board[3][row] = @board[0][row]
     @board[3][row].move(3, row)
     @board[0][row] = nil
+    @last_move = [@board[king[0]][king[1]], [2, row]]
   end
 
   def castle_ks(color)
@@ -214,6 +261,7 @@ class Board
     @board[5][row] = @board[7][row]
     @board[5][row].move(5, row)
     @board[7][row] = nil
+    @last_move = [@board[king[0]][king[1]], [6, row]]
   end
 
   def promote_pawn?(target)
