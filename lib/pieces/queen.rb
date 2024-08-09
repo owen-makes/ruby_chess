@@ -22,6 +22,7 @@ class Queen < Piece
   def initialize(position, color)
     super(color, position)
     @icon = @color.zero? ? '♕' : '♛' # 0 for white, 1 for black
+    @notation = @icon + @notation
   end
 
   def move(x, y)

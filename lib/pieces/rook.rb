@@ -14,6 +14,7 @@ class Rook < Piece
   def initialize(position, color)
     super(color, position)
     @icon = @color.zero? ? '♖' : '♜' # 0 for white, 1 for black
+    @notation = @icon + @notation
     @previous_moves = 0 # To check if castling available
   end
 

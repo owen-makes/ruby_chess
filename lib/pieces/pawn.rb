@@ -8,6 +8,7 @@ class Pawn < Piece
     @icon = @color.zero? ? '♙' : '♟' # 0 for white, 1 for black
     @move_offsets = @color.zero? ? [[0, -1], [-1, -1], [0, -2], [1, -1]] : [[0, 1], [0, 2], [1, 1], [-1, 1]]
     @previous_moves = 0
+    @notation = @icon + @notation
   end
 
   def move(x, y)

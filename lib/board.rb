@@ -76,13 +76,10 @@ class Board
         @board[target[0]][target[1]].move(target[0], target[1])
         @board[start[0]][start[1]] = nil
       end
-      promote_pawn?(target)
-      update_board_ui
     else
       capture_piece(start, target)
-      promote_pawn?(target)
     end
-
+    promote_pawn?(target)
     @last_move = [piece, target]
   end
 
@@ -99,7 +96,9 @@ class Board
     in Queen
       check_queen_path(pos_start, pos_end)
     in King | Knight
-      true
+      true if @board[pos_end[0]][pos_end[1]].nil? || @board[pos_end[0]][pos_end[1]].color != piece.color
+    else
+      false
     end
   end
 
@@ -273,13 +272,15 @@ class Board
   end
 
   def promote(target, color)
-    puts 'Type a letter to choose the piece you want to promote to (Queen(Q)//Knight(N)//Bishop(B)):'
-    choice = gets.chomp.to_s
-    @board[target[0]][target[1]] = case choice
+    puts 'Type a letter to choose the piece you want to promote to (Queen(Q)/Knight(N)/Bishop(B)/Rook(R)):'
+    # choice = gets.chomp.to_s
+    @board[target[0]][target[1]] = case gets.chomp.to_s
                                    when 'N'
                                      Knight.new(target, color)
                                    when 'B'
                                      Bishop.new(target, color)
+                                   when 'R'
+                                     Rook.new(target, color)
                                    else
                                      Queen.new(target, color)
                                    end
@@ -305,10 +306,12 @@ class Board
   def checkmate?(color)
     return false unless in_check?(color)
 
-    get_pieces(color).any? do |piece|
-      piece.legal_moves.any? do |move|
+    #  all of the player's pieces have none
+    #  legal moves that would get the player out of check.
+    get_pieces(color).all? do |piece|
+      piece.legal_moves.none? do |move|
         board_after_move = simulate_move(piece, move)
-        board_after_move.in_check?(color)
+        !board_after_move.in_check?(color)
       end
     end
   end
@@ -316,10 +319,10 @@ class Board
   def stalemate?(color)
     return false if in_check?(color)
 
-    get_pieces(color).any? do |piece|
-      piece.legal_moves.any? do |move|
+    get_pieces(color).all? do |piece|
+      piece.legal_moves.all? do |move|
         board_after_move = simulate_move(piece, move)
-        board_after_move.in_check?(color)
+        board_after_move.board == @board || board_after_move.in_check?(color)
       end
     end
   end
@@ -339,6 +342,23 @@ class Board
     board_copy = Marshal.load(serialized_board)
     board_copy.move_piece(piece.position, move)
     board_copy
+  end
+
+  def possible_moves(color, square)
+    get_pieces(color).select do |piece|
+      piece.legal_move?(square[0], square[1]) &&
+        path_clear?(piece.position, square)
+    end
+  end
+
+  def ambiguous?(color, square)
+    false unless possible_moves(color, square).length > 1
+  end
+
+  def piece_at(file_rank_square)
+    files = ('a'..'h').to_a
+    ranks = 8.downto(1).to_a
+    @board[files.index(file_rank_square[0])][ranks.index(file_rank_square[1].to_i)]
   end
 
   def clear_board

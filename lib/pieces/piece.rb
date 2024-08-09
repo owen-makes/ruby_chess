@@ -1,9 +1,13 @@
 class Piece
-  attr_reader :color
+  attr_reader :color, :notation, :position
+
+  FILES = ('a'..'h').to_a.freeze
+  RANK = 8.downto(1).to_a.freeze
 
   def initialize(color, position)
     @color = color
     @position = position
+    @notation = "#{FILES.at(@position[0])}#{RANK.at(@position[1])}"
   end
 
   def valid_position?(x, y)

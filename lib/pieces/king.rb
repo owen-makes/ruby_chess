@@ -11,6 +11,7 @@ class King < Piece
     super(color, position)
     @icon = @color.zero? ? '♔' : '♚' # 0 for white, 1 for black
     @previous_moves = 0 # To check if castling available
+    @notation = @icon + @notation
   end
 
   def move(x, y)

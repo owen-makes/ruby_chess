@@ -81,6 +81,7 @@ describe Board do
     let(:black_pawn) { Pawn.new([1, 3], 1) }
     let(:promote_pawn) { Pawn.new([1, 1], 0) }
     let(:ep_pawn) { Pawn.new([1, 4], 1) }
+    let(:another_pawn) { Pawn.new([0, 2], 0) }
 
     before do
       test_board.board[0][6] = test_pawn
@@ -123,6 +124,13 @@ describe Board do
         expect(test_board.board[1][0]).to be_a(Queen)
       end
     end
+
+    it 'does not call pawn promotion when moving to row 7' do
+      test_board.clear_board
+      test_board.board[0][2] = another_pawn
+      test_board.move_piece([0, 2], [0, 1])
+      expect(test_board).to_not receive(:promote_pawn?)
+    end
   end
 
   describe '#capture_piece' do
@@ -154,11 +162,13 @@ describe Board do
     let(:white_pawn) { Pawn.new([1, 0], 0) }
     let(:black_pawn) { Pawn.new([2, 0], 1) }
     let(:black_pawn2) { Pawn.new([2, 7], 1) }
+    let(:white_pawn2) { Pawn.new([3, 1], 0) }
 
     before do
       test_board.board[1][0] = white_pawn
       test_board.board[2][0] = black_pawn
       test_board.board[2][7] = black_pawn2
+      test_board.board[3][1] = white_pawn2
     end
 
     it 'calls promote on white pawn @ b8' do
@@ -173,6 +183,10 @@ describe Board do
 
     it 'returns false for black pawn @ c8' do
       expect(test_board.promote_pawn?([2, 0])).to eq(false)
+    end
+
+    it 'returns false for white pawn @ d7' do
+      expect(test_board.promote_pawn?([3, 1])).to eq(false)
     end
   end
 
@@ -274,6 +288,19 @@ describe Board do
       new_board.board[7][0] = King.new([7, 0], 1)
       expect(new_board.checkmate?(1)).to eq(true)
     end
+
+    it 'returns false for white when moves available to avoid check' do
+      new_board.populate
+      # Fool's mate
+      new_board.move_piece([5, 6], [5, 5])
+      new_board.move_piece([6, 6], [6, 4])
+      new_board.move_piece([3, 6], [3, 5])
+      # Black
+      new_board.move_piece([4, 1], [4, 3])
+      new_board.move_piece([3, 0], [7, 4])
+      new_board.display_board
+      expect(new_board.checkmate?(0)).to eq(false)
+    end
   end
 
   describe '#simulate_move' do
@@ -291,11 +318,25 @@ describe Board do
     subject(:new_board) { Board.new }
 
     it 'returns true for black stalemate' do
-      new_board.board[4][0] = Rook.new([6, 2], 0)
+      new_board.board[6][2] = Rook.new([6, 2], 0)
       new_board.board[7][2] = King.new([7, 2], 0)
       new_board.board[7][0] = King.new([7, 0], 1)
       new_board.update_board_ui
       expect(new_board.stalemate?(1)).to eq(true)
+    end
+
+    it 'returns false for white' do
+      new_board.populate
+      # Fool's mate
+      new_board.move_piece([5, 6], [5, 5])
+      new_board.move_piece([6, 6], [6, 4])
+      new_board.move_piece([3, 6], [3, 5])
+      # Black
+      new_board.move_piece([4, 1], [4, 3])
+      new_board.move_piece([3, 0], [7, 4])
+      new_board.move_piece([4, 7], [3, 6])
+      new_board.display_board
+      expect(new_board.stalemate?(0)).to eq(false)
     end
   end
 
@@ -374,6 +415,35 @@ describe Board do
       new_board.castle_ks(0)
       expect(new_board.board[6][7]).to be_a(King)
       expect(new_board.board[5][7]).to be_a(Rook)
+    end
+  end
+
+  describe '#possible_moves' do
+    subject(:new_board) { Board.new }
+
+    after do
+      new_board.clear_board
+    end
+
+    it 'returns array w/pawn and knight when trying to open c3 (2,5)' do
+      new_board.populate
+      expect(new_board.possible_moves(0, [2, 5]).length).to eq(2)
+    end
+
+    it 'returns single element array when square can be occupied by only one piece' do
+      new_board.populate
+      puts new_board.board[1][6].notation
+      expect(new_board.possible_moves(0, [1, 5])[0]).to be_a(Pawn)
+    end
+  end
+
+  describe '#piece_at' do
+    subject(:board) { Board.new }
+
+    it 'returns pawn at c2' do
+      board.populate
+      expect(board.piece_at('c2')).to be_a(Pawn)
+      expect(board.piece_at('c2').position).to eq([2, 6])
     end
   end
 end
