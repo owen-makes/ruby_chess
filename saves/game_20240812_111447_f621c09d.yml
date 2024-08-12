@@ -1,0 +1,451 @@
+---
+:board: !ruby/object:Board
+  board:
+  - - !ruby/object:Rook
+      color: 1
+      position:
+      - 0
+      - 0
+      notation: "♜a8"
+      icon: "♜"
+      previous_moves: 0
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 0
+      - 1
+      notation: "♟a7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 0
+      - 6
+      notation: "♙a2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    - !ruby/object:Rook
+      color: 0
+      position:
+      - 0
+      - 7
+      notation: "♖a1"
+      icon: "♖"
+      previous_moves: 0
+  - - !ruby/object:Knight
+      color: 1
+      position:
+      - 1
+      - 0
+      notation: "♞b8"
+      icon: "♞"
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 1
+      - 1
+      notation: "♟b7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 1
+      - 6
+      notation: "♙b2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    - !ruby/object:Knight
+      color: 0
+      position:
+      - 1
+      - 7
+      notation: "♘b1"
+      icon: "♘"
+  - - !ruby/object:Bishop
+      color: 1
+      position:
+      - 2
+      - 0
+      notation: "♝c8"
+      icon: "♝"
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 2
+      - 1
+      notation: "♟c7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 2
+      - 6
+      notation: "♙c2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    - !ruby/object:Bishop
+      color: 0
+      position:
+      - 2
+      - 7
+      notation: "♗c1"
+      icon: "♗"
+  - - !ruby/object:Queen
+      color: 1
+      position:
+      - 3
+      - 0
+      notation: "♛d8"
+      icon: "♛"
+    -
+    -
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 3
+      - 3
+      notation: "♟d7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 1
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 3
+      - 6
+      notation: "♙d2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    -
+  - - !ruby/object:King
+      color: 1
+      position:
+      - 4
+      - 0
+      notation: "♚e8"
+      icon: "♚"
+      previous_moves: 0
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 4
+      - 1
+      notation: "♟e7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 4
+      - 5
+      notation: "♙e2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 1
+        - -1
+      previous_moves: 1
+    -
+    - !ruby/object:King
+      color: 0
+      position:
+      - 4
+      - 7
+      notation: "♔e1"
+      icon: "♔"
+      previous_moves: 0
+  - - !ruby/object:Bishop
+      color: 1
+      position:
+      - 5
+      - 0
+      notation: "♝f8"
+      icon: "♝"
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 5
+      - 1
+      notation: "♟f7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 5
+      - 6
+      notation: "♙f2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    - !ruby/object:Bishop
+      color: 0
+      position:
+      - 5
+      - 7
+      notation: "♗f1"
+      icon: "♗"
+  - - !ruby/object:Knight
+      color: 1
+      position:
+      - 6
+      - 0
+      notation: "♞g8"
+      icon: "♞"
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 6
+      - 1
+      notation: "♟g7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    -
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 6
+      - 6
+      notation: "♙g2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    - !ruby/object:Knight
+      color: 0
+      position:
+      - 6
+      - 7
+      notation: "♘g1"
+      icon: "♘"
+  - - !ruby/object:Rook
+      color: 1
+      position:
+      - 7
+      - 0
+      notation: "♜h8"
+      icon: "♜"
+      previous_moves: 0
+    - !ruby/object:Pawn
+      color: 1
+      position:
+      - 7
+      - 1
+      notation: "♟h7"
+      icon: "♟"
+      move_offsets:
+      - - 0
+        - 1
+      - - 0
+        - 2
+      - - 1
+        - 1
+      - - -1
+        - 1
+      previous_moves: 0
+    -
+    - &1 !ruby/object:Queen
+      color: 0
+      position:
+      - 7
+      - 3
+      notation: "♕d1"
+      icon: "♕"
+    -
+    -
+    - !ruby/object:Pawn
+      color: 0
+      position:
+      - 7
+      - 6
+      notation: "♙h2"
+      icon: "♙"
+      move_offsets:
+      - - 0
+        - -1
+      - - -1
+        - -1
+      - - 0
+        - -2
+      - - 1
+        - -1
+      previous_moves: 0
+    - !ruby/object:Rook
+      color: 0
+      position:
+      - 7
+      - 7
+      notation: "♖h1"
+      icon: "♖"
+      previous_moves: 0
+  size: 8
+  board_ui: |2-
+      a b c d e f g h
+    8 ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜ 8
+    7 ♟ ♟ ♟ · ♟ ♟ ♟ ♟ 7
+    6 · · · · · · · · 6
+    5 · · · ♟ · · · ♕ 5
+    4 · · · · · · · · 4
+    3 · · · · ♙ · · · 3
+    2 ♙ ♙ ♙ ♙ · ♙ ♙ ♙ 2
+    1 ♖ ♘ ♗ · ♔ ♗ ♘ ♖ 1
+      a b c d e f g h
+  captured:
+    :whites: []
+    :blacks: []
+  last_move:
+  - *1
+  - - 7
+    - 3
+:whites: !ruby/object:Player
+  color: 0
+  name:
+  pieces: []
+  score: 0
+:blacks: &2 !ruby/object:Player
+  color: 1
+  name:
+  pieces: []
+  score: 0
+:turn: *2

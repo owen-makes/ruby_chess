@@ -1,5 +1,8 @@
 require_relative 'board'
 require_relative 'player'
+require 'colorize'
+require 'yaml'
+require 'securerandom'
 
 class Game
   attr_reader :whites, :blacks, :board
@@ -13,6 +16,7 @@ class Game
     @board.populate
     @whites = Player.new(0)
     @blacks = Player.new(1)
+    @turn = @whites
   end
 
   def get_input(player)
@@ -25,14 +29,21 @@ class Game
       puts "#{color} to move:"
       input = gets.chomp
     end
-    puts "#{opponent} in check!" if @board.in_check?(opp_num)
+    puts "#{opponent} in check!".colorize(:yellow) if @board.in_check?(opp_num)
   end
 
   def parse_input(input, player_color)
-    if input == 'O-O'
+    case input
+    when 'save'
+      save_game
+    when 'load'
+      load_game
+    when 'O-O'
       @board.castle_ks(player_color)
-    elsif input == 'O-O-O'
+      @turn = @turn == @whites ? @blacks : @whites
+    when 'O-O-O'
       @board.castle_qs(player_color)
+      @turn = @turn == @whites ? @blacks : @whites
     else
       return if PATTERN.match(input).nil?
       return if get_start_square(input, player_color).nil?
@@ -43,11 +54,11 @@ class Game
       return unless piece.color == player_color
 
       if @board.simulate_move(piece, pos_end).in_check?(player_color)
-        puts 'Invalid move. King in check!'
+        puts 'Invalid move. King in check!'.colorize(:red)
         return
       end
-
       @board.move_piece([pos_start[0], pos_start[1]], [pos_end[0], pos_end[1]])
+      @turn = @turn == @whites ? @blacks : @whites
     end
   end
 
@@ -117,7 +128,9 @@ class Game
       ╚═════╝    ╚═╝  ╚═╝    ╚══════╝    ╚══════╝    ╚══════╝
                                             by Owen Botto 😀)
     instructions = %(Play using algebraic notation.
-    For example, if you want to open with Knight to e3 just do: 'Ne3')
+    Castle King Side: O-O / Castle Queen Side: O-O-O / En Passant is done automatically by moving to the target square
+    For example, if you want to open with Knight to e3 just do: 'Ne3'. Use long notation for ambiguous moves
+    If you'd like to save your game, just type 'save' anytime.)
     puts("#{banner}\n#{instructions}")
   end
 
@@ -148,21 +161,76 @@ class Game
     return unless @board.checkmate?(0) || @board.checkmate?(1)
 
     if @board.checkmate?(1)
-      puts 'Checkmate (White wins)'
+      puts 'Checkmate (White wins)'.colorize(:green)
       @whites.score += 1
     else
-      puts 'Checkmate (Black wins)'
+      puts 'Checkmate (Black wins)'.colorize(:green)
       @blacks.score += 1
     end
 
-    puts "Whites #{whites.score}:#{blacks.score} Blacks"
+    puts "Whites #{whites.score}:#{blacks.score} Blacks".colorize(:green)
   end
 
   def announce_draw
     return unless @board.stalemate?(0) || @board.stalemate?(1)
 
-    puts 'Draw by stalemate.'
+    puts 'Draw by stalemate.'.colorize(:yellow)
     puts "Whites #{whites.score}:#{blacks.score} Blacks"
+  end
+
+  def continue_play
+    until win? || draw?
+      @board.display_board
+      get_input(@turn)
+      @board.display_board
+      break if win? || draw?
+    end
+    @board.display_board
+    announce_winner
+    announce_draw
+  end
+
+  def save_game
+    timestamp = Time.now.strftime('%Y%m%d_%H%M%S')
+    game_id = SecureRandom.hex(4)
+
+    yaml = YAML.dump({
+                       board: @board,
+                       whites: @whites,
+                       blacks: @blacks,
+                       turn: @turn
+                     })
+
+    Dir.mkdir('saves') unless Dir.exist?('saves')
+    filename = "saves/game_#{timestamp}_#{game_id}.yml"
+    File.open(filename, 'w') do |file|
+      file.puts yaml
+    end
+    puts "Game #{timestamp}_#{game_id} saved!"
+  end
+
+  def load_game
+    Dir.chdir 'saves'
+    saves = Dir.entries('.').reject { |f| File.directory?(f) }
+    saves.each_with_index { |file, idx| puts "#{idx}. #{file}" }
+
+    puts 'Choose a save using the number'
+    choice = gets.chomp.to_i
+    return puts 'Invalid choice' if choice < 0 || choice >= saves.length
+
+    string = saves[choice]
+
+    puts "Loading file: #{string}"
+    permitted_classes = [Symbol, Board, Piece, Rook, Knight, Bishop, Queen, King, Pawn, Player]
+    data = YAML.safe_load(File.read(string),
+                          permitted_classes: permitted_classes,
+                          aliases: true)
+    @board = data[:board]
+    @whites = data[:whites]
+    @blacks = data[:blacks]
+    @turn = data[:turn]
+    Dir.chdir '..'
+    continue_play
   end
 end
 
